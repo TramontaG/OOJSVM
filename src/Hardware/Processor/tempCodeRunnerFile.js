@@ -1,0 +1,2 @@
+
+        const registerA = this.fetchNextByte();
