@@ -1,12 +1,20 @@
 const { move, program } = require('./ASMParser/ASMParser');
-const { many, choice, sequenceOf } = require('./Combinators');
+const { many, choice, sequenceOf, all } = require('./Combinators');
 const { str, digits } = require('./AtomicParsers');
 const util = require('util');
 const { between, code } = require('./CombinedParsers');
 const { transform } = require('./parserUtils');
+const {
+	immediate,
+	address,
+	register,
+	immediateHex,
+	immediateCode,
+} = require('./ASMParser/AtomASMParser');
 
 const sampleProgram = `
-MOV <10 + 5> $<15 + 50>;
+MOV <5 * 5> R8;
+MOV $#0004 R3;
 `;
 
 const initialParserState = {
@@ -19,6 +27,6 @@ const initialParserState = {
 
 //const testParser = move;
 
-const testParser = many(move);
+const testParser = all(many(move));
 
 console.log(util.inspect(testParser(initialParserState), false, null, true));

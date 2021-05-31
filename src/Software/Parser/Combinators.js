@@ -35,6 +35,10 @@ const choice = parsers => parserState => {
 		}
 	});
 
+	if (!result) {
+		return updateParserError(nextState, `No matches at indes ${nextState.index}`);
+	}
+
 	return updateParserState(nextState, {
 		result: result,
 	});
@@ -71,9 +75,22 @@ const optional = parser => parserState => {
 	});
 };
 
+const all = parser => parserState => {
+	const nextParserState = parser(parserState);
+
+	if (nextParserState.index < parserState.stringToBeParsed.length) {
+		return updateParserError(nextParserState, `There is still leftover on the file`);
+	} else
+		return updateParserState(nextParserState, {
+			index: nextParserState.index,
+			value: nextParserState.value,
+		});
+};
+
 module.exports = {
 	sequenceOf,
 	choice,
 	many,
 	optional,
+	all,
 };

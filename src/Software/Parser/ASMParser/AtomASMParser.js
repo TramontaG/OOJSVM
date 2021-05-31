@@ -5,7 +5,7 @@ const { code } = require('../CombinedParsers');
 
 const hexValue = regexMatch(/^[0-9A-F]+/);
 
-const immediateHex = transform(sequenceOf([str('#'), choice([hexValue, code])]), immed => ({
+const immediateHex = transform(sequenceOf([str('#'), hexValue]), immed => ({
 	type: 'ImmediateHex',
 	value: Number('0x' + immed.result[1]),
 }));
@@ -22,7 +22,7 @@ const immediateCode = transform(code, immed => ({
 
 const immediate = choice([immediateDec, immediateHex, immediateCode]);
 
-const address = transform(sequenceOf([str('$'), immediate]), add => ({
+const address = transform(sequenceOf([str('$'), choice([immediateHex, immediateCode])]), add => ({
 	type: 'Address',
 	value: add.result[1].value,
 }));
@@ -51,4 +51,6 @@ module.exports = {
 	address,
 	register,
 	hexValue,
+	immediateHex,
+	immediateCode,
 };

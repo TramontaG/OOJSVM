@@ -15,6 +15,7 @@ const updateParserState = (previousState, newState) => {
 
 const transform = (parser, transformerFunction, errCheckFn) => parserState => {
 	const oldParserState = parser(parserState);
+	if (oldParserState.isError) return oldParserState;
 	const error = errCheckFn
 		? errCheckFn(oldParserState)
 		: {
