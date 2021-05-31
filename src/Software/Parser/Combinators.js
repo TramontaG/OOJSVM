@@ -76,7 +76,9 @@ const optional = parser => parserState => {
 };
 
 const all = parser => parserState => {
-	const nextParserState = parser(parserState);
+	const allParser = many(parser);
+	const nextParserState = allParser(parserState);
+	console.log(nextParserState);
 
 	if (nextParserState.index < parserState.stringToBeParsed.length) {
 		return updateParserError(nextParserState, `There is still leftover on the file`);
