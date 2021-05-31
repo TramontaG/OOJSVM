@@ -18,14 +18,15 @@ const transform = (parser, transformerFunction, errCheckFn) => parserState => {
 	const error = errCheckFn
 		? errCheckFn(oldParserState)
 		: {
-				isError: false,
-				error: null,
+				status: false,
 		  };
+	if (error.status) {
+		return updateParserError(oldParserState, error.msg);
+	}
+
 	return updateParserState(oldParserState, {
 		...oldParserState,
 		result: transformerFunction(oldParserState),
-		isError: error.isError,
-		error: error.error,
 	});
 };
 

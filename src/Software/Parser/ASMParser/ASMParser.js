@@ -1,5 +1,6 @@
 const { whiteSpace, digits, str } = require('../AtomicParsers');
 const { sequenceOf, choice, optional, many } = require('../Combinators');
+const { code } = require('../CombinedParsers');
 const { transform } = require('../parserUtils');
 const { immediate, address, register } = require('./AtomASMParser');
 
@@ -17,13 +18,10 @@ const move = transform(
 	instruction => ({
 		type: 'Instruction',
 		value: 'MOVE',
-		arguments: [instruction.result[3], instruction.result[6]],
+		arguments: [instruction.result[3], instruction.result[5]],
 	})
 );
 
-const program = many(move);
-
 module.exports = {
 	move,
-	program,
 };

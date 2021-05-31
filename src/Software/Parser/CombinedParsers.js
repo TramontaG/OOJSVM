@@ -13,8 +13,8 @@ const code = transform(
 	},
 	code => {
 		return {
-			isError: typeof eval(code.result) !== 'number',
-			error: `Invalid expression on index ${code.index}, it does not evaluate to a number`,
+			status: typeof eval(code.result) !== 'number',
+			msg: `Invalid expression on index ${code.index}, it does not evaluate to a number`,
 		};
 	}
 );

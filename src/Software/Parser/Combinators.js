@@ -27,7 +27,6 @@ const choice = parsers => parserState => {
 	parsers.forEach(parser => {
 		if (!done) {
 			const tempState = parser(nextState);
-
 			if (!tempState.isError) {
 				result = tempState.result;
 				done = true;
@@ -57,10 +56,7 @@ const many = (parser, identifier) => parserState => {
 	}
 
 	if (result.length == 0) {
-		return updateParserError(
-			parserState,
-			`Tried to capture many ${identifier || 'NONAME'} but got none`
-		);
+		return updateParserError(parserState, `Tried to capture many ${identifier} but got none`);
 	}
 
 	return updateParserState(nextState, {
