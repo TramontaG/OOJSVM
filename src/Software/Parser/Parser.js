@@ -27,6 +27,6 @@ const initialParserState = {
 
 //const testParser = move;
 
-const testParser = all(many(move));
+const testParser = all(move);
 
 console.log(util.inspect(testParser(initialParserState), false, null, true));
