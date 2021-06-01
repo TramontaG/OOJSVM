@@ -14,8 +14,10 @@ const {
 
 const sampleProgram = `
 MOV <5 * 5> R8;
-MOV $#0004 R3;
+MOV R4 R3;
 `;
+
+const test = `aaaaab`;
 
 const initialParserState = {
 	index: 0,
@@ -27,6 +29,7 @@ const initialParserState = {
 
 //const testParser = move;
 
-const testParser = all(move);
+const testParser = many(move, 'moveInstructions');
+const result = testParser(initialParserState);
 
-console.log(util.inspect(testParser(initialParserState), false, null, true));
+console.log(util.inspect(result, false, null, true));

@@ -18,7 +18,7 @@ const sequenceOf = parsers => parserState => {
 	});
 };
 
-const choice = parsers => parserState => {
+const choice = (parsers, identifier) => parserState => {
 	if (parserState.isError) return parserState;
 	let nextState = parserState;
 	let result;
@@ -36,7 +36,10 @@ const choice = parsers => parserState => {
 	});
 
 	if (!result) {
-		return updateParserError(nextState, `No matches at indes ${nextState.index}`);
+		return updateParserError(
+			nextState,
+			`No valid ${identifier} found on index ${parserState.index}`
+		);
 	}
 
 	return updateParserState(nextState, {
@@ -53,11 +56,14 @@ const many = (parser, identifier) => parserState => {
 	while (!error) {
 		const tempState = parser(nextState);
 		error = tempState.isError;
+
 		if (!error) {
 			result.push(tempState.result);
 			nextState = tempState;
 		}
 	}
+
+	if (nextState.isError) return nextState;
 
 	if (result.length == 0) {
 		return updateParserError(parserState, `Tried to capture many ${identifier} but got none`);
@@ -75,17 +81,18 @@ const optional = parser => parserState => {
 	});
 };
 
-const all = parser => parserState => {
-	const allParser = many(parser);
+const all = (parser, identifier) => parserState => {
+	const allParser = many(parser, identifier);
 	const nextParserState = allParser(parserState);
-	console.log(nextParserState);
+
+	if (nextParserState.isError) return nextParserState;
 
 	if (nextParserState.index < parserState.stringToBeParsed.length) {
 		return updateParserError(nextParserState, `There is still leftover on the file`);
 	} else
 		return updateParserState(nextParserState, {
 			index: nextParserState.index,
-			value: nextParserState.value,
+			result: nextParserState.result,
 		});
 };
 

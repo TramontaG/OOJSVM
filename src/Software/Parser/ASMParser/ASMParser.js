@@ -6,14 +6,14 @@ const { immediate, address, register } = require('./AtomASMParser');
 
 const move = transform(
 	sequenceOf([
-		optional(many(str('\n'))),
+		optional(many(str('\n'), 'breakLines')),
 		transform(str('MOV'), inst => ({ Instruction: inst.result })),
 		whiteSpace,
-		choice([immediate, address, register]),
+		choice([immediate, address, register], 'arg1'),
 		whiteSpace,
-		choice([address, register]),
+		choice([address, register], 'arg2'),
 		str(';'),
-		optional(many(str('\n'))),
+		optional(many(str('\n'), 'breakLines')),
 	]),
 	instruction => ({
 		type: 'Instruction',

@@ -1,2 +1,2 @@
 
-	error: null,
+const initialParserState = {
