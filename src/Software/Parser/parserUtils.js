@@ -3,6 +3,7 @@ const updateParserError = (previousState, errorMsg) => {
 		...previousState,
 		isError: true,
 		error: errorMsg,
+		left: previousState.stringToBeParsed.slice(previousState.index),
 	};
 };
 

@@ -85,10 +85,11 @@ const all = (parser, identifier) => parserState => {
 	const allParser = many(parser, identifier);
 	const nextParserState = allParser(parserState);
 
-	if (nextParserState.isError) return nextParserState;
-
 	if (nextParserState.index < parserState.stringToBeParsed.length) {
-		return updateParserError(nextParserState, `There is still leftover on the file`);
+		return updateParserError(
+			nextParserState,
+			`There is a invalid ${identifier} on index ${nextParserState.index}`
+		);
 	} else
 		return updateParserState(nextParserState, {
 			index: nextParserState.index,

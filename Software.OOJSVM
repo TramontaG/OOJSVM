@@ -1,0 +1,4 @@
+MOV <5 * 5> R3;
+JMP #AA;
+RET;
+HLT;

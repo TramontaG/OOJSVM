@@ -1,2 +1,3 @@
 
-const initialParserState = {
+	isError: false,
+	error: null,

@@ -6,26 +6,29 @@ const { code } = require('../CombinedParsers');
 const hexValue = regexMatch(/^[0-9A-F]+/);
 
 const immediateHex = transform(sequenceOf([str('#'), hexValue]), immed => ({
-	type: 'ImmediateHex',
+	type: 'Immediate',
 	value: Number('0x' + immed.result[1]),
 }));
 
 const immediateDec = transform(digits, immed => ({
-	type: 'ImmediateDec',
-	value: immed.result,
+	type: 'Immediate',
+	value: Number(immed.result),
 }));
 
 const immediateCode = transform(code, immed => ({
-	type: 'ImmediateDec',
+	type: 'Immediate',
 	value: immed.result,
 }));
 
 const immediate = choice([immediateDec, immediateHex, immediateCode]);
 
-const address = transform(sequenceOf([str('$'), choice([immediateHex, immediateCode])]), add => ({
-	type: 'Address',
-	value: add.result[1].value,
-}));
+const address = transform(
+	sequenceOf([str('$'), choice([immediateHex, immediateCode, immediateDec])]),
+	add => ({
+		type: 'Address',
+		value: add.result[1].value,
+	})
+);
 
 const register = transform(
 	choice([

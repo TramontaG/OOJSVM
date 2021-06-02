@@ -1,15 +1,5 @@
-const test  = [
-    ["a", 'b', 'c'],
-    ["a", 'b', 'c'],
-    ["a", 'b', 'c'],
-    ["a", 'b', 'c'],
-    ["a", 'b', 'c'],
-]
+const testArray = [4, 5, 6, 7];
+const testArray2 = [1, 2, 3];
+testArray2.push(...testArray);
 
-const process = arr => {
-    return arr.map(e => {
-        return ((e) => e)(e);
-    })
-}
-
-console.log(...process(test));
+console.log(testArray2);
