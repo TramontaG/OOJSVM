@@ -1,6 +1,6 @@
 const { instructionMap, registerMap } = require('./meta');
-const { instruction, push } = require('../ASMParser/ASMParser');
-const { all } = require('../Combinators');
+const { instruction } = require('../ASMParser/ASMParser');
+const { all } = require('../ParserLib/Combinators');
 const fs = require('fs');
 const Log = require('../../../Util/Log');
 const programParser = all(instruction, 'instruction');

@@ -1,7 +1,7 @@
-const { whiteSpace, digits, str, regexMatch } = require('../AtomicParsers');
-const { sequenceOf, choice } = require('../Combinators');
-const { transform } = require('../parserUtils');
-const { code } = require('../CombinedParsers');
+const { whiteSpace, digits, str, regexMatch } = require('../ParserLib/AtomicParsers');
+const { sequenceOf, choice } = require('../ParserLib/Combinators');
+const { transform } = require('../ParserLib/parserUtils');
+const { code } = require('../ParserLib/CombinedParsers');
 
 const hexValue = regexMatch(/^[0-9A-F]+/);
 

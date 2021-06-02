@@ -1,7 +1,7 @@
-const { whiteSpace, digits, str } = require('../AtomicParsers');
-const { sequenceOf, choice, optional, many } = require('../Combinators');
-const { code } = require('../CombinedParsers');
-const { transform } = require('../parserUtils');
+const { whiteSpace, digits, str } = require('../ParserLib/AtomicParsers');
+const { sequenceOf, choice, optional, many } = require('../ParserLib/Combinators');
+const { code } = require('../ParserLib/CombinedParsers');
+const { transform } = require('../ParserLib/parserUtils');
 const { immediate, address, register } = require('./AtomASMParser');
 
 const singleArgInstruction = instructionData =>

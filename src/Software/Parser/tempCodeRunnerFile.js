@@ -1,3 +1,0 @@
-
-	isError: false,
-	error: null,
