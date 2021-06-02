@@ -2,7 +2,6 @@ const { instructionMap, registerMap } = require('./meta');
 const { instruction } = require('../ASMParser/ASMParser');
 const { all } = require('../ParserLib/Combinators');
 const fs = require('fs');
-const Log = require('../../../Util/Log');
 const programParser = all(instruction, 'instruction');
 
 const readProgram = () => {
@@ -84,6 +83,5 @@ const assemble = ast => {
 };
 
 const machineCode = assemble(ast);
-Log.deepLog(ast);
 
-console.log(machineCode.map(byte => byte.toString(16)));
+module.exports = machineCode;
