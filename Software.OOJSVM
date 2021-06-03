@@ -1,5 +1,5 @@
-v sampleVar = 50;
-MOV !sampleVar R2;
+v sampleVar = <10 * 6>;
+JMP !sampleVar;
 
 v sampleVar = 10;
-MOV !sampleVar R2;
+JMP !sampleVar;

@@ -50,6 +50,8 @@ const assemble = ast => {
 
 			const encodeArg = arg => {
 				if (arg.id) {
+					if (!variableMap[arg.id]) throw `variable ${arg.id} is not declared`;
+
 					arg.value = variableMap[arg.id];
 				}
 
@@ -73,7 +75,7 @@ const assemble = ast => {
 		return [opCode, ...args];
 	};
 
-	if (ast.isError) return [];
+	if (ast.isError) throw ast.errorStack + ast.left;
 
 	ast.result.map(result => {
 		if (result.type == 'Instruction') {
@@ -90,7 +92,7 @@ const assemble = ast => {
 	return byteArray;
 };
 
-Log.deepLog(ast);
+//Log.deepLog(ast);
 const machineCode = assemble(ast);
 
 console.log(machineCode);
