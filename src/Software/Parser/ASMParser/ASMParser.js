@@ -1,8 +1,15 @@
 const { whiteSpace, digits, str } = require('../ParserLib/AtomicParsers');
-const { sequenceOf, choice, optional, many } = require('../ParserLib/Combinators');
+const { sequenceOf, choice, optional, many, all } = require('../ParserLib/Combinators');
 const { code } = require('../ParserLib/CombinedParsers');
 const { transform } = require('../ParserLib/parserUtils');
-const { immediate, address, register } = require('./AtomASMParser');
+const {
+	immediate,
+	address,
+	register,
+	variableDeclaration,
+	variableRead,
+	variableName,
+} = require('./AtomASMParser');
 
 const singleArgInstruction = instructionData =>
 	transform(
@@ -138,6 +145,10 @@ const instruction = choice(
 	'instruction'
 );
 
+const expression = choice([instruction, variableDeclaration], 'expression');
+
+const programParser = all(expression, 'expression');
+
 module.exports = {
 	move,
 	jump,
@@ -152,4 +163,5 @@ module.exports = {
 	halt,
 	noOp,
 	instruction,
+	programParser,
 };

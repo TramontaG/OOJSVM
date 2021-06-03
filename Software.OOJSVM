@@ -1,4 +1,5 @@
-MOV <5 * 5> R3;
-JMP #AA;
-RET;
-HLT;
+v sampleVar = 50;
+MOV !sampleVar R2;
+
+v sampleVar = 10;
+MOV !sampleVar R2;

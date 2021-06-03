@@ -1,8 +1,7 @@
 const { instructionMap, registerMap } = require('./meta');
-const { instruction } = require('../ASMParser/ASMParser');
-const { all } = require('../ParserLib/Combinators');
+const { instruction, programParser } = require('../ASMParser/ASMParser');
 const fs = require('fs');
-const programParser = all(instruction, 'instruction');
+const Log = require('../../../Util/Log');
 
 const readProgram = () => {
 	const file = fs.readFileSync('./software.OOJSVM', {
@@ -23,6 +22,7 @@ const ast = programParser({
 
 const assemble = ast => {
 	let byteArray = [];
+	let variableMap = {};
 
 	const push8 = byte => {
 		byteArray.push(byte);
@@ -49,6 +49,10 @@ const assemble = ast => {
 			};
 
 			const encodeArg = arg => {
+				if (arg.id) {
+					arg.value = variableMap[arg.id];
+				}
+
 				if (arg.type == 'Register') {
 					return encodeRegister(arg.value);
 				} else {
@@ -71,17 +75,24 @@ const assemble = ast => {
 
 	if (ast.isError) return [];
 
-	ast.result.map(incOrLabel => {
-		if (incOrLabel.type == 'Instruction') {
-			const instruction = incOrLabel;
+	ast.result.map(result => {
+		if (result.type == 'Instruction') {
+			const instruction = result;
 			const bytes = encodeInstruction(instruction);
 			byteArray.push(...bytes);
+		}
+
+		if (result.type === 'VariableDec') {
+			variableMap[result.id] = result.value;
 		}
 	});
 
 	return byteArray;
 };
 
+Log.deepLog(ast);
 const machineCode = assemble(ast);
 
-module.exports = machineCode;
+console.log(machineCode);
+
+//module.exports = machineCode;
