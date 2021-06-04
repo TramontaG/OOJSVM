@@ -1,2 +1,2 @@
 
-        const registerA = this.fetchNextByte();
+		Log.debugRegisters(sampleProcessor);

@@ -1,5 +1,3 @@
-v sampleVar = <10 * 6>;
-JMP !sampleVar;
-
-v sampleVar = 10;
-JMP !sampleVar;
+MOV #10 R1;
+NOP;
+HLT;

@@ -1,5 +1,6 @@
 const instructionMap = require('../Hardware/Processor/InstructionMap');
 const util = require('util');
+const colorLog = require('./ColorLogs');
 
 class Log {
 	static getStringFromByte = byte => {
@@ -24,6 +25,40 @@ class Log {
 			})
 		);
 	};
+
+	static debugMemory(memory, address) {
+		let header = `|`;
+		let debugString = '| ';
+		for (let i = address; i < address + 16; i++) {
+			header += ` ${this.getStringFromByte(i)} |`;
+			debugString += `${this.getStringFromByte(memory.getWordValue(i))} | `;
+		}
+		colorLog('\nDEBUGGING MEMORY AROUND ' + Log.getStringFrom16Bits(address), 'blue');
+		colorLog(header, 'cyan');
+		colorLog(debugString + '\n', 'magenta');
+	}
+
+	static debugRegisters(cpu) {
+		const header = () => `|  R1  |  R2  |  R3  |  R4  |  R5  |  R6  |  R7  |  R8  |`;
+
+		let registerLog = '|';
+
+		const logRegister = register => {
+			return `${Log.getStringFrom16Bits(register.getValue())}|`;
+		};
+
+		header()
+			.split('|')
+			.map(register => register.trim())
+			.map(register => {
+				if (cpu[register]) registerLog += logRegister(cpu[register]);
+			});
+
+		registerLog += logRegister(cpu.accumulator);
+		registerLog += logRegister(cpu.programCounter);
+		colorLog(header() + '  ACC |  PC  |', 'cyan');
+		colorLog(registerLog, 'magenta');
+	}
 }
 
 module.exports = Log;

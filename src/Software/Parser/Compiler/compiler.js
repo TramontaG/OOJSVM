@@ -24,18 +24,6 @@ const assemble = ast => {
 	let byteArray = [];
 	let variableMap = {};
 
-	const push8 = byte => {
-		byteArray.push(byte);
-	};
-
-	const push16 = doubleByte => {
-		const highByte = (doubleByte & 0xff00) > 8;
-		const lowByte = doubleByte & 0x00ff;
-
-		push8(highByte);
-		push16(lowByte);
-	};
-
 	const encodeInstruction = instruction => {
 		const encodeOpCode = variant => {
 			return variant.opCode;
@@ -43,6 +31,18 @@ const assemble = ast => {
 
 		const encodeArgs = instruction => {
 			let bytes = [];
+
+			const push8 = byte => {
+				bytes.push(byte);
+			};
+
+			const push16 = doubleByte => {
+				const highByte = (doubleByte & 0xff00) >> 8;
+				const lowByte = doubleByte & 0x00ff;
+
+				push8(highByte);
+				push8(lowByte);
+			};
 
 			const encodeRegister = register => {
 				return registerMap[register];
@@ -56,14 +56,15 @@ const assemble = ast => {
 				}
 
 				if (arg.type == 'Register') {
-					return encodeRegister(arg.value);
+					push8(encodeRegister(arg.value));
 				} else {
-					return arg.value;
+					push16(arg.value);
 				}
 			};
 
-			if (instruction.args1) bytes.push(encodeArg(instruction.args1));
-			if (instruction.args2) bytes.push(encodeArg(instruction.args2));
+			if (instruction.args1) encodeArg(instruction.args1);
+			if (instruction.args2) encodeArg(instruction.args2);
+
 			return bytes;
 		};
 
@@ -71,7 +72,6 @@ const assemble = ast => {
 
 		const opCode = encodeOpCode(variant);
 		const args = encodeArgs(instruction);
-
 		return [opCode, ...args];
 	};
 
@@ -97,4 +97,4 @@ const machineCode = assemble(ast);
 
 console.log(machineCode);
 
-//module.exports = machineCode;
+module.exports = machineCode;

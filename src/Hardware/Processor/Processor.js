@@ -481,16 +481,13 @@ const sampleProcessor = new Processor({
 
 loadToMemory(sampleProcessor.memory, machineCode);
 
-console.log(sampleProcessor.memory);
-return;
-
 const sampleClock = new Clock([sampleProcessor]);
 
 const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
-		sampleProcessor._debugMemory(0xff00);
-		sampleProcessor._debugRegisters();
+		Log.debugMemory(sampleProcessor.memory, 0x00);
+		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);
 	}
 }, 1);
