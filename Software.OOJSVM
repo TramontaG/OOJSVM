@@ -1,2 +1,3 @@
-NOP;
+MOV #FFFF R1;
+MOV R1 $#00AE;
 HLT;

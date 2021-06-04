@@ -130,15 +130,22 @@ class Processor {
 		return (highByte << 8) + lowByte;
 	};
 
-	//Instructions!
-	//Internal CPU workings
+	separate16 = value => {
+		const highByte = (value & 0xff00) >> 8;
+		const lowByte = value & 0x00ff;
+		return [highByte, lowByte];
+	};
+
+	glue16 = (highByte, lowByte) => {
+		return ((highByte << 8) & 0xff00) + (lowByte & 0x00ff);
+	};
+
 	/**
 	 * Does absolutely nothing
 	 * @opCode `0x00`
 	 * @Assembly `NOP`
 	 */
 	*_NOP_NoArgs() {
-		console.log('NO OP');
 		yield 'NOP';
 	}
 	/**
@@ -147,12 +154,10 @@ class Processor {
 	 * @assembly `HLT`
 	 */
 	*_HLT_NoArgs() {
-		console.log('END OF PROGRAM');
 		this.halt = true;
 		yield 'HLT';
 	}
 
-	//Moving Data
 	/**
 	 * Moves an immediate value to a register
 	 * @opCode `0x10`
@@ -161,7 +166,7 @@ class Processor {
 	 * @param {Immediate} Register
 	 * @example `0x10 0xAB 0xCD 0x01` => `MOV #ABCD R1`
 	 */
-	*_moveImmediateToRegister() {
+	*_MOV_ImmediateRegister() {
 		const value = this.fetch16Bits();
 		yield 'MOV1' + ` - Found Value = ${Log.getStringFrom16Bits(value)}`;
 
@@ -169,10 +174,6 @@ class Processor {
 		yield 'MOV2' + ` - Found Register = ${register._debugName()}`;
 
 		register.setValue(value);
-		yield 'MOV3' +
-			` - Register ${register._debugName()} has value = ${Log.getStringFromByte(
-				register.getValue()
-			)}`;
 	}
 
 	/**
@@ -183,7 +184,7 @@ class Processor {
 	 * @param {Register} RegisterB
 	 * @example `0x11 0x01 0x02`
 	 */
-	*_moveRegisterToRegister() {
+	*_MOV_RegisterRegister() {
 		const registerA = this.getRegister(this.fetchNextByte());
 		yield 'MOV1' + ` - Found RegisterA = ${registerA._debugName()}`;
 
@@ -191,34 +192,60 @@ class Processor {
 		yield 'MOV2' + ` - Found RegisterB = ${registerB._debugName()}`;
 
 		registerB.setValue(registerA.getValue());
-		yield 'MOV3' +
-			` - Set ${registerB._debugName()} to value ${Log.getStringFrom16Bits(registerB.getValue())}`;
 	}
 
-	//Branching
-	/**
-	 * Sets the program counter to point to an immediate value
-	 * @opCode `0x50`
-	 * @Assembly `JMP`
-	 * @param {Address} Address
-	 * @example `0x50 0xAB 0xCD` => `JMP #ABCD`
-	 */
-	*_jumpImmediate() {
+	*_MOV_ImmediateAddress() {
+		const value = this.fetch16Bits();
+		const [hbValue, lbValue] = this.separate16(value);
+		yield 'MOV1' + ` - Found immediate value ${Log.getStringFrom16Bits(value)}`;
+
+		const address = this.fetch16Bits();
+		yield 'MOV2' + ` - Found Address ${Log.getStringFrom16Bits(address)}`;
+
+		this.memory.setWordValue(address, hbValue);
+		this.memory.setWordValue(address + 1, lbValue);
+		yield 'MOV3' +
+			` - Inserted value ${Log.getStringFrom16Bits(this.memory.getWordValue(address))}`;
+	}
+
+	*_MOV_RegisterAddress() {
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'MOV1' +
+			` - Found RegisterA = ${register._debugName()} with value ${Log.getStringFrom16Bits(
+				register.getValue()
+			)}`;
+
+		const address = this.fetch16Bits();
+		yield 'MOV2' + ` - Found Address ${Log.getStringFrom16Bits(address)}`;
+
+		const [hbValue, lbValue] = this.separate16(register.getValue());
+		this.memory.setWordValue(address, hbValue);
+		this.memory.setWordValue(address + 1, lbValue);
+	}
+
+	*_MOV_AddressRegister() {
+		const address = this.fetch16Bits();
+		yield 'MOV1' + ` - got address ${Log.getStringFrom16Bits(address)}`;
+
+		const highByte = this.memory.getWordValue(address);
+		const lowByte = this.memory.getWordValue(address + 1);
+		const value = this.glue16(highByte, lowByte);
+		yield 'MOV1' + ` - got value ${Log.getStringFrom16Bits(value)}`;
+
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'MOV2' + ` - got register ${register._debugName()}`;
+
+		register.setValue(value);
+	}
+
+	*_JMP_Immediate() {
 		const address = this.fetch16Bits();
 		yield 'JMP1' + ` - Jumping to address ${Log.getStringFrom16Bits(address)}`;
 
 		this.programCounter.setValue(address);
 	}
 
-	/**
-	 * Sets the program counter to point to an immediate value
-	 * if the `equal` flag is `false`
-	 * @opCode `0x51`
-	 * @Assembly `JNE`
-	 * @param {Address} Address
-	 * @example `0x51 0xAB 0xCD` => `JNE #ABCD`
-	 */
-	*_jumpNotEqual() {
+	*_JNE_Immediate() {
 		const address = this.fetch16Bits();
 		yield 'JMP1' + ` - Trying to jumping to address ${Log.getStringFrom16Bits(address)}`;
 
@@ -426,8 +453,8 @@ class Processor {
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
-	debugSteps: false,
-	debugInstructions: false,
+	debugSteps: true,
+	debugInstructions: true,
 });
 
 loadToMemory(sampleProcessor.memory, machineCode);
@@ -437,7 +464,7 @@ const sampleClock = new Clock([sampleProcessor]);
 const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
-		Log.debugMemory(sampleProcessor.memory, 0x00);
+		Log.debugMemory(sampleProcessor.memory, 0xa0);
 		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);
 	}
