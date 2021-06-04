@@ -5,6 +5,7 @@ const Clock = require('../Clock/Clock');
 const Log = require('../../Util/Log');
 const loadToMemory = require('../../Software/Loader');
 const machineCode = require('../../Software/Parser/Compiler/compiler');
+const { getInstruction } = require('./InstructionMap');
 
 class Processor {
 	constructor(options) {
@@ -89,66 +90,16 @@ class Processor {
 		}
 	}
 
-	_debugMemory(address) {
-		let header = `|`;
-		let debugString = '| ';
-		for (let i = address; i < address + 16; i++) {
-			header += `${Log.getStringFromByte(i)}|`;
-			debugString += `${Log.getStringFromByte(this.memory.getWordValue(i))} | `;
-		}
-		console.log('\nDEBUGGING MEMORY AROUND', Log.getStringFrom16Bits(address));
-		console.log(header);
-		console.log(debugString, '\n');
-	}
-
-	_debugRegisters() {
-		const header = () => `|  R1  |  R2  |  R3  |  R4  |  R5  |  R6  |  R7  |  R8  |`;
-		let registerLog = '|';
-		const logRegister = register => `${Log.getStringFrom16Bits(register.getValue())}|`;
-		header()
-			.split('|')
-			.map(register => register.trim())
-			.map(register => {
-				if (this[register]) registerLog += logRegister(this[register]);
-			});
-
-		registerLog += logRegister(this.accumulator);
-		registerLog += logRegister(this.programCounter);
-		console.log(header() + '  ACC |  PC  |');
-		console.log(registerLog);
-	}
-
 	decodeInstruction(instructionByte) {
-		const instructionMap = {
-			'0x00': this._noOp,
-			'0x10': this._moveImmediateToRegister,
-			'0x11': this._moveRegisterToRegister,
-			'0x50': this._jumpImmediate,
-			'0x51': this._jumpNotEqual,
-			'0x52': this._jumpEqual,
-			'0x55': this._jumpSubRoutine,
-			'0x56': this._returnFromSubRoutine,
-			'0xA0': this._addRegisterToRegister,
-			'0xA1': this._addImmediateToRegister,
-			'0xB0': this._compareRegisterToRegister,
-			'0xC0': this._pushImmediate,
-			'0xC1': this._pushRegister,
-			'0xC2': this._popToRegister,
-			'0xFF': this._halt,
-		};
-
-		const instructionString = Log.getStringFromByte(instructionByte);
+		const instructionName = getInstruction(instructionByte);
 
 		if (this.debugInstructions) {
-			console.log(
-				'FOUND INSTRUCTION:',
-				instructionString,
-				Log.getInstructionFromByte(instructionByte)
-			);
+			console.log('FOUND INSTRUCTION:', instructionName);
 		}
 
+		const instruction = this[instructionName]();
 		this.programCounter.increment();
-		return instructionMap[instructionString].bind(this)();
+		return instruction;
 	}
 
 	pushByte = byte => {
@@ -186,7 +137,7 @@ class Processor {
 	 * @opCode `0x00`
 	 * @Assembly `NOP`
 	 */
-	*_noOp() {
+	*_NOP_NoArgs() {
 		console.log('NO OP');
 		yield 'NOP';
 	}
@@ -195,7 +146,7 @@ class Processor {
 	 * @opCode `0xFF`
 	 * @assembly `HLT`
 	 */
-	*_halt() {
+	*_HLT_NoArgs() {
 		console.log('END OF PROGRAM');
 		this.halt = true;
 		yield 'HLT';

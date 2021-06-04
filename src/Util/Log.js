@@ -35,7 +35,7 @@ class Log {
 		}
 		colorLog('\nDEBUGGING MEMORY AROUND ' + Log.getStringFrom16Bits(address), 'blue');
 		colorLog(header, 'cyan');
-		colorLog(debugString + '\n', 'magenta');
+		colorLog(debugString + '\n', 'green');
 	}
 
 	static debugRegisters(cpu) {
@@ -57,7 +57,7 @@ class Log {
 		registerLog += logRegister(cpu.accumulator);
 		registerLog += logRegister(cpu.programCounter);
 		colorLog(header() + '  ACC |  PC  |', 'cyan');
-		colorLog(registerLog, 'magenta');
+		colorLog(registerLog, 'green');
 	}
 }
 
