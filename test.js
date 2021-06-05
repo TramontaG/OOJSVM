@@ -1,5 +1,13 @@
-const testArray = [4, 5, 6, 7];
-const testArray2 = [1, 2, 3];
-testArray2.push(...testArray);
+const getFibNumber = pos => {
+	if (pos === 1) {
+		return 0;
+	}
+	if (pos === 2) {
+		return 1;
+	}
+	return getFibNumber(pos - 1) + getFibNumber(pos - 2);
+};
 
-console.log(testArray2);
+for (let i = 1; i <= 10; i++) {
+	console.log(getFibNumber(i));
+}

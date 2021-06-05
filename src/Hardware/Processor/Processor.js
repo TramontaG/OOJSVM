@@ -251,7 +251,9 @@ class Processor {
 
 	*_JNE_ImmediateImmediate() {
 		const value = this.fetch16Bits();
-		yield `JNE1 - checking ACC against ${Log.getStringFrom16Bits(value)}`;
+		yield `JNE1 - checking ACC ${Log.getStringFrom16Bits(
+			this.accumulator.getValue()
+		)} against ${Log.getStringFrom16Bits(value)}`;
 
 		const address = this.fetch16Bits();
 		if (this.accumulator.getValue() !== value) {
@@ -352,10 +354,10 @@ class Processor {
 
 		const result = register.getValue() + value;
 		const carry = result > 2 ** this.wordSize - 1;
-		this.accumulator.setValue(result & (2 ** this.wordSize - 1));
+		this.accumulator.setValue(result & 0xffff);
 		this.flags.carry = carry;
 		this.flags.zero = result === 0;
-		yield `ADD3 - Accumulator has now value ${register.getValue()}`;
+		yield `ADD3 - Accumulator has now value ${this.accumulator.getValue()}`;
 	}
 
 	*_CMP_RegisterRegister() {
@@ -469,8 +471,8 @@ class Processor {
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
-	debugSteps: false,
-	debugInstructions: false,
+	debugSteps: true,
+	debugInstructions: true,
 });
 
 loadToMemory(sampleProcessor.memory, machineCode);
@@ -481,8 +483,8 @@ const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
 		Log.debugMemory('0x00', sampleProcessor.memory, 0x00);
-		Log.debugMemory('0x10', sampleProcessor.memory, 0x10);
-		Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
+		//Log.debugMemory('0x10', sampleProcessor.memory, 0x10);
+		//Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
 		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);
 	}
