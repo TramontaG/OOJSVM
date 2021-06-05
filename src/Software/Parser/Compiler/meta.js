@@ -58,7 +58,7 @@ const instructionMap = {
 		},
 		ImmediateImmediate: {
 			opCode: 0x46,
-			sizeInBytes: 4,
+			sizeInBytes: 5,
 		},
 	},
 	JPE: {

@@ -2,6 +2,7 @@ const { instructionMap, registerMap } = require('./meta');
 const { instruction, programParser } = require('../ASMParser/ASMParser');
 const fs = require('fs');
 const Log = require('../../../Util/Log');
+const { isNullOrUndefined } = require('util');
 
 const readProgram = () => {
 	const file = fs.readFileSync('./software.OOJSVM', {
@@ -23,6 +24,7 @@ const ast = programParser({
 const assemble = ast => {
 	let byteArray = [];
 	let variableMap = {};
+	let labelMap = {};
 
 	const encodeInstruction = instruction => {
 		const encodeOpCode = variant => {
@@ -50,7 +52,7 @@ const assemble = ast => {
 
 			const encodeArg = arg => {
 				if (arg.id) {
-					if (!variableMap[arg.id]) throw `variable ${arg.id} is not declared`;
+					if (isNullOrUndefined(variableMap[arg.id])) throw `variable ${arg.id} is not declared`;
 
 					arg.value = variableMap[arg.id];
 				}
@@ -77,7 +79,21 @@ const assemble = ast => {
 
 	if (ast.isError) throw ast.errorStack + ast.left;
 
-	ast.result.map(result => {
+	//first scan, so it can properly hoist the labels
+	let address = 0;
+	ast.result.forEach(result => {
+		if (result.type === 'LabelDeclaration') {
+			variableMap[result.id] = address;
+			return;
+		}
+		if (result.type !== 'VariableDec') {
+			const sizeInBytes = instructionMap[result.value][result.variant].sizeInBytes;
+			address += sizeInBytes;
+		}
+	});
+
+	//second scan
+	ast.result.forEach(result => {
 		if (result.type == 'Instruction') {
 			const instruction = result;
 			const bytes = encodeInstruction(instruction);
@@ -92,9 +108,8 @@ const assemble = ast => {
 	return byteArray;
 };
 
-//Log.deepLog(ast);
+Log.deepLog(ast);
+
 const machineCode = assemble(ast);
-
 console.log(machineCode);
-
 module.exports = machineCode;

@@ -23,7 +23,7 @@ const immediateCode = transform(code, immed => ({
 	id: null,
 }));
 
-const variableName = transform(letters, variableName => ({
+const variableName = transform(regexMatch(/^[a-zA-Z]+[0-9A-Za-z]*/), variableName => ({
 	type: 'VariableName',
 	value: variableName.result,
 }));
@@ -34,13 +34,30 @@ const variableRead = transform(sequenceOf([str('!'), variableName]), variableRea
 	id: variableRead.result[1].value,
 }));
 
-const immediate = choice([immediateDec, immediateHex, immediateCode, variableRead]);
+const labelDeclaration = transform(
+	sequenceOf([
+		optional(many(str('\n'))),
+		optional(many(whiteSpace)),
+		str('@'),
+		variableName,
+		str(':'),
+		optional(many(str('\n'))),
+	]),
+	label => ({
+		type: 'LabelDeclaration',
+		value: null,
+		id: label.result[3].value,
+	})
+);
 
-const address = transform(sequenceOf([str('$'), immediate]), add => ({
-	type: 'Address',
-	value: add.result[1].value,
-	id: add.result[1].id,
+const labelRead = transform(sequenceOf([str('@'), variableName]), labelRead => ({
+	type: 'Immediate',
+	value: null,
+	id: labelRead.result[1].value,
 }));
+
+const immediate = choice([immediateDec, immediateHex, immediateCode, variableRead, labelRead]);
+
 const variableDeclaration = transform(
 	sequenceOf([
 		str('v'),
@@ -58,6 +75,12 @@ const variableDeclaration = transform(
 		id: variableDec.result[2].value,
 	})
 );
+
+const address = transform(sequenceOf([str('$'), immediate]), add => ({
+	type: 'Address',
+	value: add.result[1].value,
+	id: add.result[1].id,
+}));
 
 const register = transform(
 	choice([
@@ -89,4 +112,6 @@ module.exports = {
 	variableDeclaration,
 	variableRead,
 	variableName,
+	labelDeclaration,
+	labelRead,
 };

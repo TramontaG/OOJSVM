@@ -94,7 +94,7 @@ class Processor {
 		const instructionName = getInstruction(instructionByte);
 
 		if (this.debugInstructions) {
-			console.log('FOUND INSTRUCTION:', instructionName);
+			console.log(`${instructionName} - ${Log.getStringFrom16Bits(instructionByte)}`);
 		}
 
 		const instruction = this[instructionName]();
@@ -249,6 +249,17 @@ class Processor {
 		this.programCounter.setValue(register.getValue());
 	}
 
+	*_JNE_ImmediateImmediate() {
+		const value = this.fetch16Bits();
+		yield `JNE1 - checking ACC against ${Log.getStringFrom16Bits(value)}`;
+
+		const address = this.fetch16Bits();
+		if (this.accumulator.getValue() !== value) {
+			this.programCounter.setValue(address);
+			yield `JNE2 - Jumping execution to address ${Log.getStringFrom16Bits(address)}`;
+		}
+	}
+
 	*_JSR_Immediate() {
 		const newAddress = this.fetch16Bits();
 
@@ -339,6 +350,7 @@ class Processor {
 		const register = this.getRegister(this.fetchNextByte());
 		yield `ADD1 - Got register ${register._debugName()}`;
 
+		const result = register.getValue() + value;
 		const carry = result > 2 ** this.wordSize - 1;
 		this.accumulator.setValue(result & (2 ** this.wordSize - 1));
 		this.flags.carry = carry;
@@ -457,8 +469,8 @@ class Processor {
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
-	debugSteps: true,
-	debugInstructions: true,
+	debugSteps: false,
+	debugInstructions: false,
 });
 
 loadToMemory(sampleProcessor.memory, machineCode);
@@ -468,7 +480,7 @@ const sampleClock = new Clock([sampleProcessor]);
 const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
-		Log.debugMemory('0xA0', sampleProcessor.memory, 0xa0);
+		Log.debugMemory('0x00', sampleProcessor.memory, 0x00);
 		Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
 		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);

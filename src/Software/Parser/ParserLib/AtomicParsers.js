@@ -41,7 +41,7 @@ const whiteSpace = parserState => {
 			`Tried to parse whitespace but got unexpected end of input`
 		);
 
-	if (slicedTarget.startsWith(' ')) {
+	if (slicedTarget.startsWith(' ') || slicedTarget.startsWith('	')) {
 		return updateParserState(parserState, {
 			index: parserState.index + 1,
 			result: { separator: 'whitespace' },

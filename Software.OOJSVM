@@ -1,6 +1,10 @@
-MOV #0009 R1;
-PSH R1;
-PSH #FFFF;
-POP $#A0;
-POP R3;
-HLT;
+v repetitons=10;
+
+@loop:
+    ADD 1 R1;
+    MOV ACC R1;
+    JNE 10 !loop;
+    JMP @finish;
+
+@finish:
+    HLT;
