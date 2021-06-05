@@ -481,6 +481,7 @@ const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
 		Log.debugMemory('0x00', sampleProcessor.memory, 0x00);
+		Log.debugMemory('0x10', sampleProcessor.memory, 0x10);
 		Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
 		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);

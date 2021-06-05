@@ -107,9 +107,5 @@ const assemble = ast => {
 
 	return byteArray;
 };
-
-Log.deepLog(ast);
-
 const machineCode = assemble(ast);
-console.log(machineCode);
 module.exports = machineCode;
