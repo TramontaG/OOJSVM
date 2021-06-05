@@ -120,7 +120,7 @@ const push = singleArgInstruction({
 
 const pop = singleArgInstruction({
 	opCode: 'POP',
-	args1: [register],
+	args1: [register, address],
 });
 
 const halt = noArgsInstruction({

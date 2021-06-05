@@ -4,11 +4,19 @@ const colorLog = require('./ColorLogs');
 
 class Log {
 	static getStringFromByte = byte => {
-		return '0x' + byte.toString(16).toUpperCase().padStart(2, '0');
+		return '0x' + this.getHexByte(byte);
 	};
 
 	static getStringFrom16Bits = bits => {
-		return '0x' + bits.toString(16).toUpperCase().padStart(4, '0');
+		return '0x' + this.getHex16(bits);
+	};
+
+	static getHexByte = byte => {
+		return byte.toString(16).toUpperCase().padStart(2, '0');
+	};
+
+	static getHex16 = bits => {
+		return bits.toString(16).toUpperCase().padStart(4, '0');
 	};
 
 	static getInstructionFromByte = byte => {
@@ -26,25 +34,25 @@ class Log {
 		);
 	};
 
-	static debugMemory(memory, address) {
+	static debugMemory(title, memory, address) {
 		let header = `|`;
 		let debugString = '| ';
 		for (let i = address; i < address + 16; i++) {
-			header += ` ${this.getStringFromByte(i)} |`;
-			debugString += `${this.getStringFromByte(memory.getWordValue(i))} | `;
+			header += `${this.getHex16(i)}|`;
+			debugString += `${this.getHexByte(memory.getWordValue(i))} | `;
 		}
-		colorLog('\nDEBUGGING MEMORY AROUND ' + Log.getStringFrom16Bits(address), 'blue');
+		colorLog(`\n${title}`, 'blue');
 		colorLog(header, 'cyan');
-		colorLog(debugString + '\n', 'green');
+		colorLog(debugString, 'green');
 	}
 
 	static debugRegisters(cpu) {
-		const header = () => `|  R1  |  R2  |  R3  |  R4  |  R5  |  R6  |  R7  |  R8  |`;
+		const header = () => `| R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 |`;
 
 		let registerLog = '|';
 
 		const logRegister = register => {
-			return `${Log.getStringFrom16Bits(register.getValue())}|`;
+			return `${Log.getHex16(register.getValue())}|`;
 		};
 
 		header()
@@ -56,7 +64,7 @@ class Log {
 
 		registerLog += logRegister(cpu.accumulator);
 		registerLog += logRegister(cpu.programCounter);
-		colorLog(header() + '  ACC |  PC  |', 'cyan');
+		colorLog('\n' + header() + 'ACC | PC |', 'cyan');
 		colorLog(registerLog, 'green');
 	}
 }

@@ -102,6 +102,17 @@ class Processor {
 		return instruction;
 	}
 
+	pushSingleRegister = register => {
+		this.push16(register.getValue());
+		return `Register ${register._debugName()} pushed to the stack`;
+	};
+
+	popSingleRegister = register => {
+		const value = this.pop16();
+		register.setValue(value);
+		return `Register ${register._debugName()} has now value ${Log.getStringFrom16Bits(value)}`;
+	};
+
 	pushByte = byte => {
 		const address = this.stackPointer.getValue() | 0xff00;
 		this.memory.setWordValue(address, byte);
@@ -145,9 +156,8 @@ class Processor {
 	 * @opCode `0x00`
 	 * @Assembly `NOP`
 	 */
-	*_NOP_NoArgs() {
-		yield 'NOP';
-	}
+	*_NOP_NoArgs() {}
+
 	/**
 	 * Halts the CPU
 	 * @opCode `0xFF`
@@ -158,14 +168,6 @@ class Processor {
 		yield 'HLT';
 	}
 
-	/**
-	 * Moves an immediate value to a register
-	 * @opCode `0x10`
-	 * @Assembly `MOV`
-	 * @param {Register} Value
-	 * @param {Immediate} Register
-	 * @example `0x10 0xAB 0xCD 0x01` => `MOV #ABCD R1`
-	 */
 	*_MOV_ImmediateRegister() {
 		const value = this.fetch16Bits();
 		yield 'MOV1' + ` - Found Value = ${Log.getStringFrom16Bits(value)}`;
@@ -176,14 +178,6 @@ class Processor {
 		register.setValue(value);
 	}
 
-	/**
-	 * Moves the value from RegisterA to RegisterB
-	 * @opCode `0x11`
-	 * @Assembly `MOV`
-	 * @param {Register} RegisterA
-	 * @param {Register} RegisterB
-	 * @example `0x11 0x01 0x02`
-	 */
 	*_MOV_RegisterRegister() {
 		const registerA = this.getRegister(this.fetchNextByte());
 		yield 'MOV1' + ` - Found RegisterA = ${registerA._debugName()}`;
@@ -245,89 +239,73 @@ class Processor {
 		this.programCounter.setValue(address);
 	}
 
-	*_JNE_Immediate() {
-		const address = this.fetch16Bits();
-		yield 'JMP1' + ` - Trying to jumping to address ${Log.getStringFrom16Bits(address)}`;
+	*_JMP_Register() {
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'MOV1' +
+			` - Found RegisterA = ${register._debugName()} with value ${Log.getStringFrom16Bits(
+				register.getValue()
+			)}`;
 
-		if (!this.flags.equal) {
-			this.programCounter.setValue(address);
-			yield 'JMP2' + ` - Jumped because the flag Equal is false`;
-		}
+		this.programCounter.setValue(register.getValue());
 	}
 
-	/**
-	 * Sets the program counter to point to an immediate value
-	 * if the `equal` flag is `true`
-	 * @opCode `0x52`
-	 * @Assembly `JPE`
-	 * @param {Address} Address
-	 * @example `0x51 0xAB 0xCD` => `JNE #ABCD`
-	 */
-	*_jumpEqual() {
-		const address = this.fetch16Bits();
-		yield 'JMP1' + ` - Trying to jumping to address ${Log.getStringFrom16Bits(address)}`;
-
-		if (!this.flags.equal) {
-			this.programCounter.setValue(address);
-			yield 'JMP2' + ` - Jumped because the flag Equal is false`;
-		}
-	}
-
-	/**
-	 * Pushes R1-R4 registers to the stack, stack and
-	 * jumps execution to an address in memory
-	 * @opCode `0x55`
-	 * @Assembly `JSR`
-	 * @param {Address} Address
-	 * @example `0x55 0x05 0x50` => `JSR #0550`
-	 */
-	*_jumpSubRoutine() {
-		//Push Register function
-		const pushSingleRegister = register => {
-			const registerValue = register.getValue();
-			this.push16(registerValue);
-			return `Register ${register._debugName()} pushed to the stack`;
-		};
-
-		//pushing current address to the stack, so that we can return
+	*_JSR_Immediate() {
 		const newAddress = this.fetch16Bits();
+
 		this.push16(this.programCounter.getValue());
 		yield `Pushed return address ${Log.getStringFrom16Bits(this.programCounter.getValue())}`;
 
-		//Pushing registers to the stack
-		yield pushSingleRegister(this.R1);
-		yield pushSingleRegister(this.R2);
-		yield pushSingleRegister(this.R3);
-		yield pushSingleRegister(this.R4);
+		yield this.pushSingleRegister(this.R1);
+		yield this.pushSingleRegister(this.R2);
+		yield this.pushSingleRegister(this.R3);
+		yield this.pushSingleRegister(this.R4);
 
 		this.programCounter.setValue(newAddress);
 		yield `Jumped to address ${Log.getStringFrom16Bits(newAddress)}`;
 	}
 
-	/**
-	 * Returns from a subRoutine, restoring R1-R4 and with
-	 * the return from the instruction on the accumulator.
-	 * @opCode `0x56`
-	 * @Assembly `RET`
-	 * @example `0x56` => `RET`
-	 */
-	*_returnFromSubRoutine() {
-		const popSingleRegister = register => {
-			const value = this.pop16();
-			register.setValue(value);
-			return `Register ${register._debugName()} has now value ${Log.getStringFrom16Bits(value)}`;
-		};
+	*_JSR_Register() {
+		const newAddress = this.getRegister(this.fetchNextByte()).getValue();
+		this.push16(this.programCounter.getValue());
+		yield `Pushed return address ${Log.getStringFrom16Bits(this.programCounter.getValue())}`;
 
+		yield this.pushSingleRegister(this.R1);
+		yield this.pushSingleRegister(this.R2);
+		yield this.pushSingleRegister(this.R3);
+		yield this.pushSingleRegister(this.R4);
+
+		this.programCounter.setValue(newAddress);
+		yield `Jumped to address ${Log.getStringFrom16Bits(newAddress)}`;
+	}
+
+	*_JSR_Address() {
+		const pointer = this.fetch16Bits();
+		const [hbNewAddress, lbNewAddress] = this.memory.getWordValue(pointer);
+		const newAddress = this.glue16(hbNewAddress, lbNewAddress);
+
+		this.push16(this.programCounter.getValue());
+		yield `Pushed return address ${Log.getStringFrom16Bits(this.programCounter.getValue())}`;
+
+		yield this.pushSingleRegister(this.R1);
+		yield this.pushSingleRegister(this.R2);
+		yield this.pushSingleRegister(this.R3);
+		yield this.pushSingleRegister(this.R4);
+
+		this.programCounter.setValue(newAddress);
+		yield `Jumped to address ${Log.getStringFrom16Bits(newAddress)}`;
+	}
+
+	*_RET_NoArgs() {
 		//Popping return value to the accumulator;
 		const returnValue = this.pop16();
 		this.accumulator.setValue(returnValue);
 		yield `Function returned ${Log.getStringFrom16Bits(returnValue)}`;
 
 		//Popping values back to registers
-		yield popSingleRegister(this.R4);
-		yield popSingleRegister(this.R3);
-		yield popSingleRegister(this.R2);
-		yield popSingleRegister(this.R1);
+		yield this.popSingleRegister(this.R4);
+		yield this.popSingleRegister(this.R3);
+		yield this.popSingleRegister(this.R2);
+		yield this.popSingleRegister(this.R1);
 
 		//Popping return address;
 		const returnAddress = this.pop16();
@@ -335,16 +313,7 @@ class Processor {
 		yield `Returned to address ${Log.getStringFrom16Bits(returnAddress)}`;
 	}
 
-	//ALU related
-	/**
-	 * Adds two registers and outputs the accumulator
-	 * @opCode `0xA0`
-	 * @Assembly `ADD`
-	 * @param {Register} registerA
-	 * @param {Register} registerB
-	 * @example `0xA0 0x01 0x02` => `ADD R1 R2`
-	 */
-	*_addRegisterToRegister() {
+	*_ADD_RegisterRegister() {
 		const registerA = this.getRegister(this.fetchNextByte());
 		yield 'ADD1' + ` - Found RegisterA = ${registerA._debugName()}`;
 
@@ -355,74 +324,95 @@ class Processor {
 		const carry = result > 2 ** this.wordSize - 1;
 		this.accumulator.setValue(result & (2 ** this.wordSize - 1));
 		this.flags.carry = carry;
+		this.flags.zero = result === 0;
+
 		yield 'ADD3' +
-			` - Accumulator has now value = ${Log.getStringFrom16Bits(
+			` - ACC has now value = ${Log.getStringFrom16Bits(
 				this.accumulator.getValue()
-			)} / Carry flag is ${carry}`;
+			)} - Flags =  ${carry}`;
 	}
 
-	/**
-	 * Adds the value of a register and a immediate and
-	 * outputs the result into the accumulator
-	 * @opCode `0xA1`
-	 * @Assembly `ADD`
-	 * @param {Register} register
-	 * @param {dByte} value
-	 * @example `0xA1 0x12 0x34 0x01` => `ADD #1234 R1`
-	 */
-	*_addImmediateToRegister() {
+	*_ADD_ImmediateRegister() {
 		const value = this.fetch16Bits();
 		yield `ADD2 - Got value ${value}`;
 
 		const register = this.getRegister(this.fetchNextByte());
 		yield `ADD1 - Got register ${register._debugName()}`;
 
-		this.accumulator.setValue(value + register.getValue());
+		const carry = result > 2 ** this.wordSize - 1;
+		this.accumulator.setValue(result & (2 ** this.wordSize - 1));
+		this.flags.carry = carry;
+		this.flags.zero = result === 0;
 		yield `ADD3 - Accumulator has now value ${register.getValue()}`;
 	}
 
-	/**
-	 * Compares two Registers and set the flags accordingly, does not
-	 * put the result in the accumulator.
-	 * @Opcode `0XB0`
-	 * @Assebly `CMP`
-	 * @param {Register} `RegisterA`
-	 * @param {Register} `RegisterB`
-	 * @example `0xB0 0x01 0x02` => `CMP R1 R2`
-	 */
-	*_compareRegisterToRegister() {
+	*_CMP_RegisterRegister() {
 		const registerA = this.getRegister(this.fetchNextByte());
-		const registerB = this.getRegister(this.fetchNextByte());
-		yield 'CMP1' +
-			` - Comparing Register ${registerA._debugName()} to Register ${registerB._debugName()}`;
+		yield 'CMP1' + ` - Comparing Register ${registerA._debugName()}`;
 
-		const result = registerA.getValue() - registerB.getValue();
-		this.flags.equal = result === 0;
-		yield 'CMP2' + ` - The flag EQUAL is now ${this.flags.equal}`;
+		const registerB = this.getRegister(this.fetchNextByte());
+		yield 'CMP2' + ` - to Register ${registerB._debugName()}`;
+
+		this.accumulator.setValue(registerA.getValue() - registerB.getValue());
 	}
 
-	/**
-	 * Pushes an immediate value to the stack;
-	 * @opCode `0xC0`
-	 * @Assembly `PSH`
-	 * @param {Value} Value
-	 * @example `0xC0 0x12 0x34` => `PSH #1234`
-	 */
-	*_pushImmediate() {
+	*_CMP_ImmediateRegister() {
+		const value = this.fetch16Bits();
+		yield 'CMP1' + ` - Comparing value ${Log.getStringFrom16Bits(value)}`;
+
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'CMP2' + ` - to Register ${register._debugName()}`;
+
+		this.accumulator.setValue(value - register.getValue());
+	}
+
+	*_CMP_RegisterImmediate() {
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'CMP1' + ` - Comparing Register ${register._debugName()}`;
+
+		const value = this.fetch16Bits();
+		yield 'CMP1' + ` - to value ${Log.getStringFrom16Bits(value)}`;
+
+		this.accumulator.setValue(register.getValue() - value);
+	}
+
+	*_CMP_MemoryRegister() {
+		const address = this.fetch16Bits();
+		const hbValue = this.memory.getWordValue(address);
+		const lbValue = this.memory.getWordValue(address + 1);
+		const value = this.glue16(hbValue, lbValue);
+		yield 'CMP1' +
+			` - Comparing value ${Log.getStringFrom16Bits(value)} on adress ${Log.getStringFrom16Bits(
+				address
+			)}`;
+
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'CMP2' + ` - to Register ${register._debugName()}`;
+
+		this.accumulator.setValue(value - register.getValue());
+	}
+
+	*_CMP_RegisterMemory() {
+		const register = this.getRegister(this.fetchNextByte());
+		yield 'CMP1' + ` - Comparing Register ${register._debugName()}`;
+
+		const address = this.fetch16Bits();
+		const hbValue = this.memory.getWordValue(address);
+		const lbValue = this.memory.getWordValue(address + 1);
+		const value = this.glue16(hbValue, lbValue);
+		yield 'CMP1' +
+			` - to value ${Log.getStringFrom16Bits(value)} on adress ${Log.getStringFrom16Bits(address)}`;
+
+		this.accumulator.setValue(register.getValue() - value);
+	}
+
+	*_PSH_Immediate() {
 		const value = this.fetch16Bits();
 		this.push16(value);
 		yield `Pushed value ${Log.getStringFrom16Bits(value)}`;
 	}
 
-	/**
-	 * Pushes the value from a register to the stack;
-	 * @opCode `0xC1`
-	 * @Assembly `PSH`
-	 * @param {Register} Register
-	 * @param {Value} Value
-	 * @example `0xC1 0x01` => `PSH R1`
-	 */
-	*_pushRegister() {
+	*_PSH_Register() {
 		const register = this.getRegister(this.fetchNextByte());
 		const registerValue = register.getValue();
 		this.push16(registerValue);
@@ -431,14 +421,19 @@ class Processor {
 		)}`;
 	}
 
-	/**
-	 * Pops a value from the stack to a register
-	 * @opCode `0xC2`
-	 * @Assembly `POP`
-	 * @param {Register} register
-	 * @example `0xC2 0x01` => `POP R1`
-	 */
-	*_popToRegister() {
+	*_PSH_Address() {
+		const address = this.fetch16Bits();
+		const hbValue = this.memory.getWordValue(address);
+		const lbValue = this.memory.getWordValue(address + 1);
+		const value = this.glue16(hbValue, lbValue);
+		this.push16(value);
+
+		yield `Pushed value ${Log.getStringFrom16Bits(value)} from address ${Log.getStringFrom16Bits(
+			address
+		)}`;
+	}
+
+	*_POP_Register() {
 		const value = this.pop16();
 		yield `POP1 - Popped value ${Log.getStringFrom16Bits(value)} from stack`;
 
@@ -447,6 +442,15 @@ class Processor {
 		yield `POP3 - Register ${register._debugName()} has now value ${Log.getStringFrom16Bits(
 			register.getValue()
 		)}`;
+	}
+
+	*_POP_Address() {
+		const [hbValue, lbValue] = this.separate16(this.pop16());
+		const address = this.fetch16Bits();
+		yield `POP1` + ` - Got address ${Log.getStringFrom16Bits(address)}`;
+
+		this.memory.setWordValue(address, hbValue);
+		this.memory.setWordValue(address + 1, lbValue);
 	}
 }
 
@@ -464,7 +468,8 @@ const sampleClock = new Clock([sampleProcessor]);
 const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
-		Log.debugMemory(sampleProcessor.memory, 0xa0);
+		Log.debugMemory('0xA0', sampleProcessor.memory, 0xa0);
+		Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
 		Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);
 	}
