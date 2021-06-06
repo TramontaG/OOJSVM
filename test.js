@@ -8,6 +8,6 @@ const getFibNumber = pos => {
 	return getFibNumber(pos - 1) + getFibNumber(pos - 2);
 };
 
-for (let i = 1; i <= 10; i++) {
+for (let i = 1; i <= 16; i++) {
 	console.log(getFibNumber(i));
 }

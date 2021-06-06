@@ -43,6 +43,7 @@ class Processor {
 		this._doneInstruction = true;
 		this._activeInstruction;
 		this.halt = false;
+		this.fastMode = options.fastMode;
 	}
 
 	fetchNextByte() {
@@ -82,6 +83,12 @@ class Processor {
 
 	onClock() {
 		if (this.halt) return;
+		if (this.fastMode) {
+			let done = false;
+			while (!done) {
+				done = this._activeInstruction.next().done;
+			}
+		}
 
 		const instructionStep = this._activeInstruction.next();
 		this._doneInstruction = instructionStep.done;
@@ -471,8 +478,9 @@ class Processor {
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
-	debugSteps: true,
-	debugInstructions: true,
+	debugSteps: false,
+	debugInstructions: false,
+	fastMode: true,
 });
 
 loadToMemory(sampleProcessor.memory, machineCode);

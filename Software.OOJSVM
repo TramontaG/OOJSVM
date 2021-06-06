@@ -1,4 +1,4 @@
-v position=9;
+v position=15;
 
 @setup:
     MOV 0 R5;
@@ -7,7 +7,7 @@ v position=9;
 
 @loop:
     JSR @getNextFib;
-    MOV ACC R1;
+    MOV ACC R3;
     MOV R8 ACC;
     JNE !position @loop;
     JMP @finish;

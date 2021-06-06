@@ -108,4 +108,6 @@ const assemble = ast => {
 	return byteArray;
 };
 const machineCode = assemble(ast);
+Log.deepLog(ast);
+console.log(machineCode.map(byte => byte.toString(16)));
 module.exports = machineCode;
