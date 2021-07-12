@@ -1,0 +1,2 @@
+
+	getWordValue = () => null;

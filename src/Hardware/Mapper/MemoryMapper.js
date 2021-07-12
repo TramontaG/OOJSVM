@@ -1,8 +1,5 @@
-const Memory = require('./../Memory/Memory');
-
-class MemoryMapper extends Memory {
-	constructor(addressSpace, wordSize) {
-		super(addressSpace, wordSize);
+class MemoryMapper {
+	constructor() {
 		this.attachedDevices = [];
 	}
 
