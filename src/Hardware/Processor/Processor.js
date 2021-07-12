@@ -1,5 +1,6 @@
 const ProgramCounter = require('./ProgramCounter');
 const Memory = require('./../Memory/Memory');
+const MemoryMapper = require('./../Mapper/MemoryMapper');
 const Register = require('./Register');
 const Clock = require('../Clock/Clock');
 const Log = require('../../Util/Log');
@@ -12,7 +13,7 @@ class Processor {
 		this.wordSize = options.wordSize;
 		this.addressSpace = options.addressSpace;
 		this.programCounter = new ProgramCounter(this.wordSize);
-		this.memory = new Memory(this.addressSpace, 8);
+		this.memory = options.memoryMapper;
 
 		this.R1 = new Register(this.wordSize, 'R1');
 		this.R2 = new Register(this.wordSize, 'R2');
@@ -475,12 +476,17 @@ class Processor {
 	}
 }
 
+const memoryMapper = new MemoryMapper();
+
+memoryMapper.attachDevice([0x0000, 0xffff], new Memory(0xffff, 8));
+
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
 	debugSteps: false,
 	debugInstructions: false,
 	fastMode: true,
+	memoryMapper: memoryMapper,
 });
 
 loadToMemory(sampleProcessor.memory, machineCode);
