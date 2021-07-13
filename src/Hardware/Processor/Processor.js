@@ -1,6 +1,7 @@
 const ProgramCounter = require('./ProgramCounter');
 const Memory = require('./../Memory/Memory');
 const MemoryMapper = require('./../Mapper/MemoryMapper');
+const VMConsole = require('./../io/VMConsole');
 const Register = require('./Register');
 const Clock = require('../Clock/Clock');
 const Log = require('../../Util/Log');
@@ -206,8 +207,18 @@ class Processor {
 
 		this.memory.setWordValue(address, hbValue);
 		this.memory.setWordValue(address + 1, lbValue);
-		yield 'MOV3' +
-			` - Inserted value ${Log.getStringFrom16Bits(this.memory.getWordValue(address))}`;
+		yield 'MOV3' + ` - Inserted value ${this.memory.getWordValue(address)}`;
+	}
+
+	*_MOV_Immediate8Address() {
+		const value = this.fetchNextByte();
+		yield 'MOV1' + ` - Found immediate value ${Log.getStringFromByte(value)}`;
+
+		const address = this.fetch16Bits();
+		yield 'MOV2' + ` - Found Address ${Log.getStringFrom16Bits(address)}`;
+
+		this.memory.setWordValue(address, value);
+		yield 'MOV3' + ` - Inserted value ${this.memory.getWordValue(address)}`;
 	}
 
 	*_MOV_RegisterAddress() {
@@ -477,15 +488,17 @@ class Processor {
 }
 
 const memoryMapper = new MemoryMapper();
+const vmConsole = new VMConsole();
 
 memoryMapper.attachDevice([0x0000, 0xffff], new Memory(0xffff, 8));
+memoryMapper.attachDevice([0x1000, 0x1004], vmConsole);
 
 const sampleProcessor = new Processor({
 	wordSize: 16,
 	addressSpace: 0xffff,
 	debugSteps: false,
 	debugInstructions: false,
-	fastMode: true,
+	fastMode: false,
 	memoryMapper: memoryMapper,
 });
 
@@ -496,10 +509,10 @@ const sampleClock = new Clock([sampleProcessor]);
 const execution = setInterval(() => {
 	sampleClock.pulse();
 	if (sampleProcessor.halt) {
-		Log.debugMemory('0x00', sampleProcessor.memory, 0x00);
+		//Log.debugMemory('0x00', sampleProcessor.memory, 0x00);
 		//Log.debugMemory('0x10', sampleProcessor.memory, 0x10);
 		//Log.debugMemory('Stack', sampleProcessor.memory, 0xff00);
-		Log.debugRegisters(sampleProcessor);
+		//Log.debugRegisters(sampleProcessor);
 		clearInterval(execution);
 	}
 }, 1);

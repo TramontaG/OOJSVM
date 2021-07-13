@@ -27,6 +27,10 @@ const instructionMap = {
 			opCode: 0x14,
 			sizeInBytes: 4,
 		},
+		Immediate8Address: {
+			opCode: 0x15,
+			sizeInBytes: 4,
+		},
 	},
 
 	JMP: {

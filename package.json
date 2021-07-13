@@ -1,14 +1,14 @@
 {
-  "name": "OOJSVM",
-  "version": "1.0.0",
-  "description": "Uma máquina virtual just for fun orientada a objeto",
-  "main": "index.js",
-  "author": "Guilherme Tramontano",
-  "license": "MIT",
-  "private": true,
-
-  "scripts": {
-    "start": "node ./src/Boot/boot.js",
-    "dev": "nodemon ./src/Boot/boot.js"
-  }
+	"name": "OOJSVM",
+	"version": "1.0.0",
+	"description": "Uma máquina virtual just for fun orientada a objeto",
+	"main": "index.js",
+	"author": "Guilherme Tramontano",
+	"license": "MIT",
+	"private": true,
+	"scripts": {
+		"start": "node ./src/Boot/boot.js",
+		"dev": "nodemon ./src/Boot/boot.js",
+		"lineCount": "linecounter count --rules=\"ignoreDirs(.git)\""
+	}
 }

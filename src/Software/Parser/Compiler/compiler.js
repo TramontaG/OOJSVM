@@ -53,12 +53,13 @@ const assemble = ast => {
 			const encodeArg = arg => {
 				if (arg.id) {
 					if (isNullOrUndefined(variableMap[arg.id])) throw `variable ${arg.id} is not declared`;
-
 					arg.value = variableMap[arg.id];
 				}
 
 				if (arg.type == 'Register') {
 					push8(encodeRegister(arg.value));
+				} else if (arg.type == 'Immediate8') {
+					push8(arg.value);
 				} else {
 					push16(arg.value);
 				}

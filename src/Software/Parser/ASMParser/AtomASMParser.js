@@ -7,7 +7,7 @@ const hexValue = regexMatch(/^[0-9A-F]+/);
 
 const immediateHex = transform(sequenceOf([str('#'), hexValue]), immed => ({
 	type: 'Immediate',
-	value: Number('0x' + immed.result[1]),
+	value: Number('0x' + immed.result[1]) & 0xffff,
 	id: null,
 }));
 
@@ -58,6 +58,12 @@ const labelRead = transform(sequenceOf([str('@'), variableName]), labelRead => (
 
 const immediate = choice([immediateDec, immediateHex, immediateCode, variableRead, labelRead]);
 
+const immediate8 = transform(sequenceOf([str('*'), immediate]), immed => ({
+	type: 'Immediate8',
+	value: Number(immed.result[1].value) & 0xff,
+	id: null,
+}));
+
 const variableDeclaration = transform(
 	sequenceOf([
 		str('v'),
@@ -104,6 +110,7 @@ const register = transform(
 
 module.exports = {
 	immediate,
+	immediate8,
 	address,
 	register,
 	hexValue,

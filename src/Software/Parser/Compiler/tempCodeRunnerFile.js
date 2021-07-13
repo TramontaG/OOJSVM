@@ -1,2 +1,1 @@
-
-//module.exports = machineCode;
+dule.exports = machineCode;

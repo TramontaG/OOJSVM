@@ -4,8 +4,13 @@ class VMConsole {
 	}
 
 	setWordValue = (address, value) => {
-		const actions = [this.clearConsole, this.addCharToBuffer, this.backspace, this.log];
-
+		const actions = [
+			this.clearConsole,
+			this.addCharToBuffer,
+			this.backspace,
+			this.log,
+			this.clearBuffer,
+		];
 		actions[address](value);
 	};
 
@@ -27,18 +32,14 @@ class VMConsole {
 				return (acc += String.fromCharCode(current));
 			}, '')
 		);
+		this.clearBuffer();
+	};
+
+	clearBuffer = () => {
+		this.buffer = [];
 	};
 
 	getWordValue = () => null;
 }
 
-const vmConsole = new VMConsole();
-
-vmConsole.setWordValue(1, 65);
-vmConsole.setWordValue(1, 66);
-vmConsole.setWordValue(1, 67);
-vmConsole.setWordValue(1, 68);
-vmConsole.setWordValue(1, 69);
-vmConsole.setWordValue(2, 10);
-vmConsole.setWordValue(1, 70);
-vmConsole.setWordValue(3, 10);
+module.exports = VMConsole;

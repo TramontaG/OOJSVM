@@ -10,6 +10,7 @@ const {
 	variableRead,
 	variableName,
 	labelDeclaration,
+	immediate8,
 } = require('./AtomASMParser');
 
 const singleArgInstruction = instructionData =>
@@ -79,7 +80,7 @@ const noOp = noArgsInstruction({
 
 const move = doubleArgInstruction({
 	opCode: 'MOV',
-	args1: [immediate, register, address],
+	args1: [immediate8, immediate, register, address],
 	args2: [register, address],
 });
 

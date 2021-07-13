@@ -1,25 +1,15 @@
-v position=15;
+MOV *72 $#1001;
+MOV *101 $#1001;
+MOV *108 $#1001;
+MOV *108 $#1001;
+MOV *111 $#1001;
+MOV *44 $#1001;
+MOV *32 $#1001;
+MOV *119 $#1001;
+MOV *111 $#1001;
+MOV *114 $#1001;
+MOV *108 $#1001;
+MOV *100 $#1001;
 
-@setup:
-    MOV 0 R5;
-    MOV 1 R6;
-    MOV 1 R8;
-
-@loop:
-    JSR @getNextFib;
-    MOV ACC R3;
-    MOV R8 ACC;
-    JNE !position @loop;
-    JMP @finish;
-
-@finish:
-    HLT;
-
-@getNextFib:
-    ADD 1 R8;
-    MOV ACC R8;
-    ADD R5 R6;
-    MOV R6 R5;
-    MOV ACC R6;
-    PSH ACC;
-    RET;
+MOV *10 $#1003;
+HLT;
