@@ -88,6 +88,15 @@ const address = transform(sequenceOf([str('$'), immediate]), add => ({
 	id: add.result[1].id,
 }));
 
+const anythingButLineBreak = regexMatch(/^.+/);
+
+const afterInstructionComment = anythingButLineBreak;
+const singleLineComment = sequenceOf([str('//'), anythingButLineBreak, str('\n')]);
+
+const anythingButAsteriskSlashOrLineBreak = regexMatch(/((?!\*\/).)*/);
+const lineOfAMultilineComment = choice([str('\n'), anythingButAsteriskSlashOrLineBreak]);
+const multilineComment = sequenceOf([str('/*'), many(lineOfAMultilineComment), str('*/')]);
+
 const register = transform(
 	choice([
 		str('R1'),
@@ -121,4 +130,7 @@ module.exports = {
 	variableName,
 	labelDeclaration,
 	labelRead,
+	singleLineComment,
+	multilineComment,
+	afterInstructionComment,
 };

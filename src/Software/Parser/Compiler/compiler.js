@@ -19,6 +19,7 @@ const ast = programParser({
 	isError: false,
 	error: null,
 	stringToBeParsed: program,
+	errorStack: [],
 });
 
 const assemble = ast => {
@@ -108,7 +109,7 @@ const assemble = ast => {
 
 	return byteArray;
 };
-const machineCode = assemble(ast);
-//Log.deepLog(ast);
+//const machineCode = assemble(ast);
+Log.deepLog(ast);
 //console.log(machineCode.map(byte => byte.toString(16)));
-module.exports = machineCode;
+//module.exports = machineCode;

@@ -7,36 +7,35 @@ const {
 	address,
 	register,
 	variableDeclaration,
-	variableRead,
-	variableName,
 	labelDeclaration,
 	immediate8,
+	multilineComment,
+	singleLineComment,
+	afterInstructionComment,
 } = require('./AtomASMParser');
 
 const singleArgInstruction = instructionData =>
 	transform(
 		sequenceOf([
-			optional(many(str('\n'), 'Breaklines')),
 			optional(many(whiteSpace)),
 			str(instructionData.opCode),
 			whiteSpace,
 			choice(instructionData.args1),
 			str(';'),
 			optional(many(whiteSpace)),
-			optional(many(str('\n'), 'Breaklines')),
+			optional(afterInstructionComment),
 		]),
 		instruction => ({
 			type: 'Instruction',
 			value: instructionData.opCode,
-			args1: instruction.result[4],
-			variant: instruction.result[4].type,
+			args1: instruction.result[3],
+			variant: instruction.result[3].type,
 		})
 	);
 
 const doubleArgInstruction = instructionData =>
 	transform(
 		sequenceOf([
-			optional(many(str('\n'), 'Breaklines')),
 			optional(many(whiteSpace)),
 			str(instructionData.opCode),
 			whiteSpace,
@@ -45,26 +44,25 @@ const doubleArgInstruction = instructionData =>
 			choice(instructionData.args2),
 			str(';'),
 			optional(many(whiteSpace)),
-			optional(many(str('\n'), 'breakLines')),
+			optional(afterInstructionComment),
 		]),
 		instruction => ({
 			type: 'Instruction',
 			value: instructionData.opCode,
-			args1: instruction.result[4],
-			args2: instruction.result[6],
-			variant: instruction.result[4].type + instruction.result[6].type,
+			args1: instruction.result[3],
+			args2: instruction.result[5],
+			variant: instruction.result[3].type + instruction.result[5].type,
 		})
 	);
 
 const noArgsInstruction = instructionData =>
 	transform(
 		sequenceOf([
-			optional(many(str('\n'), 'Breaklines')),
 			optional(many(whiteSpace)),
 			str(instructionData.opCode),
 			str(';'),
 			optional(many(whiteSpace)),
-			optional(many(str('\n'), 'breakLines')),
+			optional(afterInstructionComment),
 		]),
 		instruction => ({
 			type: 'Instruction',
@@ -153,7 +151,17 @@ const instruction = choice(
 	'instruction'
 );
 
-const expression = choice([instruction, variableDeclaration, labelDeclaration], 'expression');
+const expression = choice(
+	[
+		instruction,
+		variableDeclaration,
+		labelDeclaration,
+		singleLineComment,
+		multilineComment,
+		str('\n'),
+	],
+	'expression'
+);
 
 const programParser = all(expression, 'expression');
 

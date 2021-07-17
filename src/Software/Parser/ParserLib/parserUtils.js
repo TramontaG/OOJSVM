@@ -1,9 +1,9 @@
 const updateParserError = (previousState, errorMsg) => {
+	previousState.errorStack.push(errorMsg);
 	return {
 		...previousState,
 		isError: true,
-		errorStack: errorMsg,
-		left: previousState.stringToBeParsed.slice(previousState.index),
+		left: previousState.stringToBeParsed.slice(previousState.index).split('\n'),
 	};
 };
 
@@ -11,6 +11,7 @@ const updateParserState = (previousState, newState) => {
 	return {
 		...previousState,
 		...newState,
+		errorStack: [],
 	};
 };
 
