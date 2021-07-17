@@ -90,12 +90,21 @@ const address = transform(sequenceOf([str('$'), immediate]), add => ({
 
 const anythingButLineBreak = regexMatch(/^.+/);
 
-const afterInstructionComment = anythingButLineBreak;
-const singleLineComment = sequenceOf([str('//'), anythingButLineBreak, str('\n')]);
-
 const anythingButAsteriskSlashOrLineBreak = regexMatch(/((?!\*\/).)*/);
 const lineOfAMultilineComment = choice([str('\n'), anythingButAsteriskSlashOrLineBreak]);
-const multilineComment = sequenceOf([str('/*'), many(lineOfAMultilineComment), str('*/')]);
+
+const afterInstructionComment = anythingButLineBreak;
+const singleLineComment = transform(
+	sequenceOf([str('//'), anythingButLineBreak, str('\n')]),
+	state => state.result[1]
+);
+
+const multilineComment = transform(
+	sequenceOf([str('/*'), many(lineOfAMultilineComment), str('*/'), optional(str('\n'))]),
+	state => {
+		return state.result[1].join('');
+	}
+);
 
 const register = transform(
 	choice([

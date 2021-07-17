@@ -84,6 +84,8 @@ const assemble = ast => {
 	//first scan, so it can properly hoist the labels
 	let address = 0;
 	ast.result.forEach(result => {
+		if (['SkipLine', 'Comment'].includes(result.type)) return;
+
 		if (result.type === 'LabelDeclaration') {
 			variableMap[result.id] = address;
 			return;
@@ -96,7 +98,7 @@ const assemble = ast => {
 
 	//second scan
 	ast.result.forEach(result => {
-		if (result.type == 'Instruction') {
+		if (result.type === 'Instruction') {
 			const instruction = result;
 			const bytes = encodeInstruction(instruction);
 			byteArray.push(...bytes);

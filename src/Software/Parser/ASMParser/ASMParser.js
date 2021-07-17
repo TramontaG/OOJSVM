@@ -24,6 +24,7 @@ const singleArgInstruction = instructionData =>
 			str(';'),
 			optional(many(whiteSpace)),
 			optional(afterInstructionComment),
+			optional(str('\n')),
 		]),
 		instruction => ({
 			type: 'Instruction',
@@ -45,6 +46,7 @@ const doubleArgInstruction = instructionData =>
 			str(';'),
 			optional(many(whiteSpace)),
 			optional(afterInstructionComment),
+			optional(str('\n')),
 		]),
 		instruction => ({
 			type: 'Instruction',
@@ -63,6 +65,7 @@ const noArgsInstruction = instructionData =>
 			str(';'),
 			optional(many(whiteSpace)),
 			optional(afterInstructionComment),
+			optional(str('\n')),
 		]),
 		instruction => ({
 			type: 'Instruction',
@@ -151,15 +154,17 @@ const instruction = choice(
 	'instruction'
 );
 
+const skipLine = transform(str('\n'), result => ({
+	type: 'SkipLine',
+}));
+
+const comment = transform(choice([singleLineComment, multilineComment]), comment => ({
+	type: 'Comment',
+	value: comment.result,
+}));
+
 const expression = choice(
-	[
-		instruction,
-		variableDeclaration,
-		labelDeclaration,
-		singleLineComment,
-		multilineComment,
-		str('\n'),
-	],
+	[instruction, variableDeclaration, labelDeclaration, comment, skipLine],
 	'expression'
 );
 
